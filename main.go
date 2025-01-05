@@ -21,7 +21,7 @@ func main() {
 	mux.HandleFunc("/", handleRoot)
 
 	mux.HandleFunc("POST /users", createUser)
-	mux.HandleFunc(" GET /users/{id}", getUserById)
+	mux.HandleFunc("GET /users/{id}", getUserById)
 	mux.HandleFunc("DELETE /users/{id}", deleteUser)
 
 	fmt.Println("Server listing on PORT 8080")
