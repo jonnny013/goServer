@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"sync"
 )
 
@@ -50,5 +51,25 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUserById(w http.ResponseWriter, r *http.Request) {
-	r.PathValue("id")
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	cacheMutex.RLock()
+	user, ok := userCache[id]
+	cacheMutex.RUnlock()
+	if !ok {
+		http.Error(w, "User not found", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	j, err := json.Marshal(user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(j)
 }
