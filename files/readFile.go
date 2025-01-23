@@ -25,11 +25,30 @@ func GetPost(filePath string) (Post, error) {
 		return post, err
 	}
 	post.Title = title
+
+	body, err := ParseSection(filePath, "---")
+	if err != nil {
+		return post, err
+	}
+	post.Body = body
+
+	desc, err1 := ParseSection(filePath, "Description: ")
+	if err1 != nil {
+		return post, err1
+	}
+	post.Description = desc
+
+	tags, err := ParseSection(filePath, "Tags: ")
+	if err != nil {
+		return post, err
+	}
+	tagSlice := strings.Split(tags, " ")
+	post.Tags = append(post.Tags, tagSlice...)
 	fmt.Print("\n -----> \n", post)
 	return post, nil
 }
 
-var postKeys = []string{"Title: ", "Description: ", "Body: ", "Tags: "}
+var postKeys = []string{"Title: ", "Description: ", "---", "Tags: "}
 
 func ParseSection(filePath, prefix string) (string, error) {
 	var itemToReturn string
