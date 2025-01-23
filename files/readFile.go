@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -11,18 +12,27 @@ type Post struct {
 	Tags                     []string
 }
 
-func GetPost(filePath string) Post {
+func GetPost(filePath string) (Post, error) {
 	var post = Post{
-		Title: "",
+		Title:       "",
 		Description: "",
-		Body: "",
-		Tags: []string{},
+		Body:        "",
+		Tags:        []string{},
 	}
-	return post
+
+	title, err := ParseSection(filePath, "Title: ")
+	if err != nil {
+		return post, err
+	}
+	post.Title = title
+	fmt.Print("\n -----> \n", post)
+	return post, nil
 }
 
-func ParseTitle(filePath string) (string, error) {
-	var title string
+var postKeys = []string{"Title: ", "Description: ", "Body: ", "Tags: "}
+
+func ParseSection(filePath, prefix string) (string, error) {
+	var itemToReturn string
 	file, err := os.Open(filePath)
 
 	if err != nil {
@@ -34,18 +44,22 @@ func ParseTitle(filePath string) (string, error) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, "Title:") {
-			title = title + strings.TrimPrefix(line, "Title: ")
+		if strings.HasPrefix(line, prefix) {
+			itemToReturn = itemToReturn + strings.TrimPrefix(line, prefix)
 			stillTitle = true
 		} else if stillTitle {
-			if !strings.HasPrefix(line, "Description:") {
-				title = title + "\n" + line
-			} else {
-				stillTitle = false
+			canContinue := true
+			for _, item := range postKeys {
+				if strings.HasPrefix(line, item) {
+					canContinue = false
+					stillTitle = false
+				}
 			}
-
+			if canContinue {
+				itemToReturn = itemToReturn + "\n" + line
+			}
 		}
 
 	}
-	return title, nil
+	return itemToReturn, nil
 }
