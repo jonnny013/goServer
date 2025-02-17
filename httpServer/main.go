@@ -4,10 +4,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
+const dbFileName = "game.db.json"
+
 func main() {
-	server := NewPlayerServer(NewInMemoryPlayerStore())
+	db, err := os.OpenFile(dbFileName, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		log.Fatalf("problem opening %s: %v", dbFileName, err)
+	}
+	store := NewFileSystemPlayerStore(db)
+	server := NewPlayerServer(store)
+
 	port := 8080
 	fmt.Printf("Server running on %d", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), server))
